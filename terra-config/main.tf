@@ -33,9 +33,23 @@ data "aws_vpc" "default" {
   default = true
 }
 
+data "aws_ami" "ubuntu" {
+    most_recent = true
+    owners = ["amazon"]
+  
+      filter {
+        name   = "name"
+        values = ["ubuntu/images/hvm-ssd/ubuntu-*-amd64-server-*"] # Adjust for desired Ubuntu version
+      }
+
+      filter {
+        name   = "virtualization-type"
+        values = ["hvm"]
+      }
+    }
 
 resource "aws_instance" "web" {
-  ami           = "ami-0360c520857e3138f"
+  ami           = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
