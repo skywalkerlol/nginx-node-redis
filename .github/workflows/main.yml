@@ -1,4 +1,4 @@
-name: Docker Compose CI
+name: Terraform CI/CD with Auto Teardown
 
 on:
   push:
@@ -7,30 +7,57 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  terraform:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terra-config
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      - name: Build and run with Docker Compose
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+      - name: Wait for instance startup
         run: |
-          docker compose up -d --build
-          docker compose ps
+          echo "⏳ Waiting 90s for instance and app startup..."
+          sleep 90
 
-      - name: Wait for services
+      - name: Fetch Public IP
+        id: ec2_ip
         run: |
-          echo "⏳ Waiting for services to start..."
-          sleep 10
+          PUBLIC_IP=$(terraform output -raw public_ip)
+          echo "public_ip=$PUBLIC_IP" >> $GITHUB_OUTPUT
 
-      - name: Health check NGINX
+      - name: Health Check App
         run: |
-          curl -f http://localhost:80 || (docker compose logs && exit 1)
+          echo "🔍 Checking app at http://${{ steps.ec2_ip.outputs.public_ip }}"
+          curl -f http://${{ steps.ec2_ip.outputs.public_ip }} || (echo "App not responding" && exit 1)
 
-      - name: Shut down
+      - name: Keep App Running
+        run: |
+          echo "⏳ Keeping app alive for 5 minutes..."
+          sleep 300
+
+      - name: Terraform Destroy
         if: always()
-        run: docker compose down
+        run: terraform destroy -auto-approve
