@@ -55,13 +55,13 @@ resource "aws_instance" "web" {
 
   user_data = <<-EOF
               #!/bin/bash
-              sudo apt-get update -y
-              sudo apt-get install -y docker.io docker-compose git
-              sudo systemctl start docker
-              sudo systemctl enable docker
+              apt-get update -y
+              apt-get install -y docker.io docker-compose git
+              systemctl start docker
+              systemctl enable docker
               git clone https://github.com/Pravesh-Sudha/nginx-node-redis.git 
               cd nginx-node-redis/
-              sudo docker-compose up -d --build
+              docker-compose up -d --build
               EOF
 
   tags = {
