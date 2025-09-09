@@ -39,7 +39,7 @@ data "aws_ami" "ubuntu" {
   
       filter {
         name   = "name"
-        values = ["ubuntu/images/hvm-ssd/ubuntu-*-amd64-server-*"] # Adjust for desired Ubuntu version
+        values = ["ubuntu/images/hvm-ssd/ubuntu-*-amd64-server-*"]
       }
 
       filter {
@@ -59,7 +59,7 @@ resource "aws_instance" "web" {
               apt-get install -y docker.io docker-compose git
               systemctl start docker
               systemctl enable docker
-              git clone https://github.com/Pravesh-Sudha/nginx-node-redis 
+              git clone https://github.com/Pravesh-Sudha/nginx-node-redis.git 
               cd nginx-node-redis/
               docker-compose up -d --build
               EOF
