@@ -8,7 +8,7 @@ tree
 .
 ├── LICENSE
 ├── README.md
-├── compose.yml
+├── docker-compose.yml
 ├── nginx
 │   ├── Dockerfile
 │   └── nginx.conf
